@@ -1,0 +1,27 @@
+[
+  {
+    "fecha": "Jueves",
+    "hora": "17:45",
+    "tipo": "obra"
+  },
+  {
+    "fecha": "Miércoles",
+    "hora": "17:45",
+    "tipo": "particular"
+  },
+  {
+    "fecha": "Miércoles",
+    "hora": "17:45",
+    "tipo": "particular"
+  },
+  {
+    "fecha": "Jueves",
+    "hora": "17:45",
+    "tipo": "particular"
+  },
+  {
+    "fecha": "Viernes",
+    "hora": "18:30",
+    "tipo": "particular"
+  }
+]
