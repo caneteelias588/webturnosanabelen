@@ -1,200 +1,252 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Calendar from "./components/Calendar";
+import { initMercadoPago } from "@mercadopago/sdk-react";
+
+// Tu clave pública
+initMercadoPago("APP_USR-7e79393b-0105-4b71-923f-xxxxxxxxxxxx");
 
 export default function Home() {
-  const [dia, setDia] = useState<string | null>(null);
-  const [hora, setHora] = useState<string | null>(null);
-  const [tipo, setTipo] = useState<"particular" | "obra_social" | null>(null);
-  
-  // Estados para datos del paciente
-  const [nombre, setNombre] = useState("");
-  const [telefono, setTelefono] = useState("");
+  // --- ESTADOS ---
+  const [selectedDia, setSelectedDia] = useState<string | null>(null);
+  const [selectedHora, setSelectedHora] = useState<string | null>(null);
+  const [nombrePaciente, setNombrePaciente] = useState("");
+  const [telefonoPaciente, setTelefonoPaciente] = useState("");
+  const [cargando, setCargando] = useState(false);
 
-  const fotosCarrusel = ["/perfil2.jpg", "/perfil1.jpg", "/perfil.jpg"];
-  const [indiceFoto, setIndiceFoto] = useState(0);
+  // Estados de Servicio
+  const [servicioPrincipal, setServicioPrincipal] = useState<"consulta" | "apto" | null>(null);
+  const [subTipoConsulta, setSubTipoConsulta] = useState<"particular" | "obrasocial" | null>(null);
+
+  // Ref para scroll
+  const seccionReservasRef = useRef<HTMLDivElement>(null);
+  const scrollToReservas = () => seccionReservasRef.current?.scrollIntoView({ behavior: "smooth" });
+
+  // Carrusel de Fotos (3 FOTOS)
+  const imagenes = ["/perfil.jpg", "/perfil1.jpg", "/perfil2.jpg"];
+  const [imagenActual, setImagenActual] = useState(0);
 
   useEffect(() => {
     const intervalo = setInterval(() => {
-      setIndiceFoto((prevIndex) => (prevIndex + 1) % fotosCarrusel.length);
-    }, 3500); 
+      setImagenActual((prev) => (prev + 1) % imagenes.length);
+    }, 4000);
     return () => clearInterval(intervalo);
-  }, [fotosCarrusel.length]);
+  }, []);
 
-  const TELEFONO_WHATSAPP = "543876405797"; 
-
-  const precioTotal = tipo === "particular" ? 22000 : tipo === "obra_social" ? 18000 : 0;
-  const senia = precioTotal / 2;
-
-  const scrollearAturnos = () => {
-    const seccionTurnos = document.getElementById("seccion-turnos");
-    if (seccionTurnos) {
-      seccionTurnos.scrollIntoView({ behavior: "smooth" });
+  // Calcular Precios
+  const getDatosServicio = () => {
+    if (servicioPrincipal === "apto") return { titulo: "Apto Físico / ANSES", total: 15000, sena: 7500 };
+    if (servicioPrincipal === "consulta") {
+      if (subTipoConsulta === "particular") return { titulo: "Consulta Particular", total: 22000, sena: 11000 };
+      if (subTipoConsulta === "obrasocial") return { titulo: "Consulta Obra Social", total: 18000, sena: 9000 };
     }
+    return null;
   };
+  const servicioActual = getDatosServicio();
 
-  const handleDiaChange = (nuevoDia: string) => {
-    setDia(nuevoDia);
-    setHora(null);
-  };
-
-  async function pagarSenia() {
-    if (!dia || !hora || !tipo || !nombre || !telefono) {
-      alert("Por favor, completá todos los datos (Día, Hora, Nombre y Teléfono) 🌸");
+  // Función de Pago
+  const handlePagar = async () => {
+    if (!servicioActual || !selectedDia || !selectedHora || !nombrePaciente || !telefonoPaciente) {
+      alert("Por favor completá todos los pasos.");
       return;
     }
-
+    setCargando(true);
     try {
-      const res = await fetch("/api/pagar", {
+      const descripcion = `${servicioActual.titulo} - Paciente: ${nombrePaciente} (Tel: ${telefonoPaciente})`;
+      const response = await fetch("/api/pagar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ monto: senia, nombre, dia, hora }),
+        body: JSON.stringify({
+          monto: servicioActual.sena,
+          nombre: descripcion,
+          dia: selectedDia,
+          hora: selectedHora,
+        }),
       });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        alert("Error al iniciar pago. Intente nuevamente.");
-      }
+      const data = await response.json();
+      if (data.url) window.location.href = data.url;
     } catch (error) {
       console.error(error);
-      alert("Error de conexión");
+      setCargando(false);
     }
-  }
+  };
 
   return (
-    <main style={{ backgroundColor: "#fff0f5", backgroundImage: "url('/fondos.jpg')", backgroundRepeat: "repeat", minHeight: "100vh", padding: "40px 20px", fontFamily: "'Quicksand', 'Nunito', sans-serif" }}>
-      <style jsx global>{` @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap'); `}</style>
+    // 1. FONDO PRINCIPAL
+    <div style={{ fontFamily: "'Varela Round', sans-serif", backgroundImage: "url('/fondos.jpg')", backgroundSize: "600px", minHeight: "100vh", padding: "20px" }}>
       
-      <a href={`https://wa.me/${TELEFONO_WHATSAPP}?text=Hola Dra. Ana, quisiera realizar una consulta.`} target="_blank" rel="noopener noreferrer" style={{ position: "fixed", bottom: "30px", right: "30px", backgroundColor: "#25D366", color: "white", width: "65px", height: "65px", borderRadius: "50%", display: "flex", justifyContent: "center", alignItems: "center", boxShadow: "0 4px 15px rgba(37, 211, 102, 0.4)", zIndex: 1000, textDecoration: "none", fontSize: "35px", border: "3px solid white" }}>💬</a>
-
-      <section style={{ maxWidth: "850px", margin: "0 auto 40px auto", backgroundColor: "#ffffff", borderRadius: "30px", boxShadow: "0 20px 40px rgba(219, 39, 119, 0.1)", overflow: "hidden", border: "1px solid #fce7f3" }}>
-        <div style={{ background: "linear-gradient(135deg, #f472b6 0%, #be185d 100%)", padding: "40px", color: "white", position: "relative" }}>
-          <div style={{ position: "absolute", top: "20px", right: "20px", width: "80px", height: "80px", borderRadius: "20px", backgroundColor: "white", padding: "5px", boxShadow: "0 5px 15px rgba(0,0,0,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-             <img src="/perfil3.jpg" alt="Logo" style={{ width: "90%", height: "90%", objectFit: "contain" }} />
-          </div>
-          <div style={{ display: "flex", gap: "25px", alignItems: "center", flexWrap: "wrap" }}>
-            <div style={{ width: "120px", height: "120px", borderRadius: "50%", overflow: "hidden", border: "5px solid rgba(255,255,255,0.8)", backgroundColor: "#fff", flexShrink: 0, boxShadow: "0 5px 15px rgba(0,0,0,0.1)" }}>
-              <img src="/perfil.jpg" alt="Dra. Ana" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            </div>
-            <div>
-              <h1 style={{ margin: 0, fontSize: "2.2rem", fontWeight: "700" }}>Dra. Ana Belén</h1>
-              <p style={{ margin: "5px 0 0 0", fontSize: "1.2rem", opacity: 0.95, fontWeight: "500" }}>Médica. MP 7327 🩺</p>
-            </div>
-          </div>
-        </div>
-        <div style={{ padding: "40px" }}>
-          <div style={{ fontSize: "1.1rem", lineHeight: "1.7", color: "#4b5563", marginBottom: "35px", textAlign: "center", fontWeight: "500" }}>
-            <p style={{ marginBottom: "15px" }}>En mi consultorio médico ofrezco atención integral a niños y adolescentes, abarcando desde consultas de rutina hasta tratamientos especializados.</p>
-            <p>Acompañemos el crecimiento de los niños con una atención amorosa, respetuosa y dedicada, cuidando su salud y la tranquilidad de la familia.</p>
-          </div>
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: "35px" }}>
-            <div style={{ position: "relative", width: "100%", maxWidth: "450px", height: "380px", borderRadius: "20px", overflow: "hidden", boxShadow: "0 10px 25px rgba(219, 39, 119, 0.15)", border: "4px solid #fff" }}>
-              <img key={indiceFoto} src={fotosCarrusel[indiceFoto]} alt="Fotos Dra" style={{ width: "100%", height: "100%", objectFit: "cover", animation: "fadeIn 0.8s" }} />
-            </div>
-          </div>
-          <div style={{ textAlign: "center" }}>
-            <button onClick={scrollearAturnos} style={{ backgroundColor: "#db2777", color: "white", border: "none", padding: "16px 45px", borderRadius: "50px", fontSize: "1.1rem", fontWeight: "bold", cursor: "pointer", boxShadow: "0 8px 20px rgba(219, 39, 119, 0.4)", transition: "transform 0.2s" }} onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.05)"} onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}>👇 Reservar Turno Online</button>
-          </div>
-        </div>
-      </section>
-
-      <section id="seccion-turnos" style={{ maxWidth: "850px", margin: "0 auto", backgroundColor: "#ffffff", borderRadius: "30px", boxShadow: "0 15px 30px rgba(0,0,0,0.05)", overflow: "hidden", border: "1px solid #fce7f3" }}>
-        <div style={{ padding: "30px", borderBottom: "1px solid #fce7f3", backgroundColor: "#fff5f8" }}>
-          <h2 style={{ margin: 0, color: "#9d174d", textAlign: "center", fontSize: "1.6rem", fontWeight: "700" }}>📅 Agenda tu Cita</h2>
-        </div>
-        <div style={{ backgroundColor: "#fff1f2", color: "#9f1239", padding: "20px 30px", display: "flex", gap: "10px", alignItems: "flex-start", borderBottom: "1px solid #fecdd3" }}>
-          <span style={{ fontSize: "1.4rem", lineHeight: "1" }}>⚠️</span>
-          <p style={{ margin: 0, fontSize: "0.95rem", lineHeight: "1.5" }}><strong>Política:</strong> En caso de que no puedas asistir, avísanos 24 horas antes. Caso contrario la seña no es reembolsable.</p>
-        </div>
+      {/* 2. TARJETA PRINCIPAL */}
+      <div style={{ maxWidth: "800px", margin: "0 auto", backgroundColor: "white", borderRadius: "30px", overflow: "hidden", boxShadow: "0 10px 40px rgba(219, 39, 119, 0.2)" }}>
         
-        <div style={{ padding: "40px" }}>
-          <div style={{ marginBottom: "50px" }}>
-            <h3 style={{ color: "#be185d", fontSize: "1.3rem", marginBottom: "25px", display: "flex", alignItems: "center", gap: "12px", fontWeight: "700" }}><span style={{ background: "#fbcfe8", color: "#831843", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", fontSize: "1rem" }}>1</span>Elegí el día y la hora</h3>
-            <Calendar selectedDia={dia} selectedHora={hora} onSelectDia={handleDiaChange} onSelectHora={setHora} />
+        {/* HEADER ROSA */}
+        <header style={{ background: "linear-gradient(135deg, #ec4899 0%, #db2777 100%)", padding: "40px 30px", color: "white", position: "relative" }}>
+          <div style={{ position: "absolute", top: "20px", right: "20px", backgroundColor: "white", padding: "5px", borderRadius: "12px" }}>
+            <img src="/perfil3.jpg" alt="Logo" style={{ width: "50px", height: "50px", objectFit: "contain" }} />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "25px", flexWrap: "wrap" }}>
+            <img src="/perfil.jpg" alt="Dra. Ana" style={{ width: "120px", height: "120px", borderRadius: "50%", border: "5px solid rgba(255,255,255,0.8)", objectFit: "cover" }} />
+            <div>
+              <h1 style={{ margin: 0, fontSize: "2.5rem", fontWeight: "bold" }}>Dra. Ana Belén</h1>
+              <p style={{ margin: "8px 0 0 0", fontSize: "1.3rem", opacity: 0.9 }}>Médica. MP 7327 🩺</p>
+            </div>
+          </div>
+        </header>
+
+        {/* CONTENIDO DE LA PORTADA */}
+        <div style={{ padding: "40px 35px" }}>
+          
+          {/* DESCRIPCIÓN (CORREGIDA: TODO PAREJO) */}
+          <div style={{ textAlign: "center", color: "#374151", marginBottom: "40px", lineHeight: "1.7", fontSize: "1.3rem" }}>
+            <p style={{ marginBottom: "20px" }}>
+              En mi consultorio médico ofrezco atención integral a niños y adolescentes, abarcando desde consultas de rutina hasta tratamientos especializados.
+            </p>
+            {/* Saqué el fontWeight 'bold' para que sea igual a la de arriba */}
+            <p>
+              Acompañemos el crecimiento de los niños con una atención amorosa, respetuosa y dedicada, cuidando su salud y la tranquilidad de la familia.
+            </p>
+          </div>
+
+          {/* CARRUSEL CUADRADO */}
+          <div style={{ 
+              width: "100%", 
+              maxWidth: "550px",
+              aspectRatio: "1 / 1",
+              margin: "0 auto 50px auto",
+              borderRadius: "25px", 
+              overflow: "hidden", 
+              boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+              border: "6px solid #fff1f2"
+          }}>
+            <img 
+              src={imagenes[imagenActual]} 
+              alt="Consultorio" 
+              style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top center", transition: "opacity 0.5s ease" }} 
+            />
+          </div>
+
+          {/* Botón para Bajar */}
+          <div style={{ textAlign: "center" }}>
+            <button 
+              onClick={scrollToReservas}
+              style={{ padding: "20px 60px", fontSize: "1.5rem", backgroundColor: "#db2777", color: "white", border: "none", borderRadius: "50px", cursor: "pointer", fontWeight: "bold", boxShadow: "0 8px 25px rgba(219, 39, 119, 0.4)", transition: "transform 0.1s" }}
+            >
+              📅 Reservar un Turno
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. SECCIÓN DE RESERVAS */}
+      <div ref={seccionReservasRef} style={{ maxWidth: "800px", margin: "50px auto", paddingBottom: "60px" }}>
+        
+        {/* PASO 1 */}
+        <div style={estiloTarjeta}>
+          <h3 style={estiloTituloPaso}>1. ¿Qué tipo de turno necesitás?</h3>
+          <div style={{ display: "flex", gap: "20px", marginBottom: "25px", flexWrap: "wrap" }}>
+            <button onClick={() => { setServicioPrincipal("consulta"); setSubTipoConsulta(null); }} style={estiloBotonSeleccion(servicioPrincipal === "consulta")}>🩺 Consulta Médica</button>
+            <button onClick={() => { setServicioPrincipal("apto"); setSubTipoConsulta(null); }} style={estiloBotonSeleccion(servicioPrincipal === "apto")}>📝 Aptos / Certificados</button>
           </div>
           
-          <div style={{ marginBottom: "40px" }}>
-            <h3 style={{ color: "#be185d", fontSize: "1.3rem", marginBottom: "25px", display: "flex", alignItems: "center", gap: "12px", fontWeight: "700" }}><span style={{ background: "#fbcfe8", color: "#831843", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", fontSize: "1rem" }}>2</span>Tipo de consulta</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
-              <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 25px", border: tipo === "particular" ? "2px solid #db2777" : "2px solid #f3f4f6", borderRadius: "20px", cursor: "pointer", backgroundColor: tipo === "particular" ? "#fff1f2" : "white", transition: "all 0.2s", boxShadow: "0 4px 10px rgba(0,0,0,0.03)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}><input type="radio" name="tipo" checked={tipo === "particular"} onChange={() => setTipo("particular")} style={{ transform: "scale(1.3)", accentColor: "#db2777" }} /><span style={{ fontWeight: "700", color: "#374151", fontSize: "1.05rem" }}>Particular</span></div><span style={{ fontSize: "1.2rem", color: "#be185d", fontWeight: "800" }}>$22.000</span>
-              </label>
-              <label style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 25px", border: tipo === "obra_social" ? "2px solid #db2777" : "2px solid #f3f4f6", borderRadius: "20px", cursor: "pointer", backgroundColor: tipo === "obra_social" ? "#fff1f2" : "white", transition: "all 0.2s", boxShadow: "0 4px 10px rgba(0,0,0,0.03)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}><input type="radio" name="tipo" checked={tipo === "obra_social"} onChange={() => setTipo("obra_social")} style={{ transform: "scale(1.3)", accentColor: "#db2777" }} /><span style={{ fontWeight: "700", color: "#374151", fontSize: "1.05rem" }}>Obra Social</span></div><span style={{ fontSize: "1.2rem", color: "#be185d", fontWeight: "800" }}>$18.000</span>
-              </label>
-            </div>
-          </div>
-
-          <div style={{ marginBottom: "40px" }}>
-            <h3 style={{ color: "#be185d", fontSize: "1.3rem", marginBottom: "25px", display: "flex", alignItems: "center", gap: "12px", fontWeight: "700" }}>
-              <span style={{ background: "#fbcfe8", color: "#831843", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", fontSize: "1rem" }}>3</span>
-              Tus Datos
-            </h3>
-            {/* 👇 ACÁ HICE LOS CAMBIOS DE COLOR */}
-            <div style={{ display: "grid", gap: "15px" }}>
-               <input 
-                 type="text" 
-                 placeholder="Nombre y Apellido del Paciente" 
-                 value={nombre}
-                 onChange={(e) => setNombre(e.target.value)}
-                 style={{ 
-                   width: "100%", padding: "15px", borderRadius: "15px", 
-                   border: "2px solid #db2777", // Borde Oscuro
-                   backgroundColor: "#fff0f5",  // Fondo Rosita claro
-                   color: "#374151",            // Letra Oscura
-                   fontWeight: "600",           // Letra Gruesa
-                   fontSize: "1rem", outline: "none", fontFamily: "inherit" 
-                 }}
-               />
-               <input 
-                 type="tel" 
-                 placeholder="Número de Celular (para contactarte)" 
-                 value={telefono}
-                 onChange={(e) => setTelefono(e.target.value)}
-                 style={{ 
-                   width: "100%", padding: "15px", borderRadius: "15px", 
-                   border: "2px solid #db2777", // Borde Oscuro
-                   backgroundColor: "#fff0f5",  // Fondo Rosita claro
-                   color: "#374151",            // Letra Oscura
-                   fontWeight: "600",           // Letra Gruesa
-                   fontSize: "1rem", outline: "none", fontFamily: "inherit" 
-                 }}
-               />
-            </div>
-          </div>
-
-        </div>
-
-        <div style={{ backgroundColor: "#fdf2f8", padding: "35px", borderTop: "2px dashed #fbcfe8" }}>
-          {!dia || !hora || !tipo ? (
-            <p style={{ textAlign: "center", color: "#9ca3af", fontStyle: "italic", fontSize: "1rem" }}>👈 Completá los pasos para ver el total a pagar.</p>
-          ) : (
-            <div style={{ animation: "fadeIn 0.5s ease" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "25px", borderBottom: "1px solid #fbcfe8", paddingBottom: "20px" }}>
-                <div><small style={{ color: "#be185d", fontWeight: "800", letterSpacing: "1px" }}>FECHA</small><p style={{ fontWeight: "800", fontSize: "1.3rem", margin: "5px 0", color: "#374151" }}>{dia} {hora}hs</p></div>
-                <div style={{ textAlign: "right" }}><small style={{ color: "#be185d", fontWeight: "800", letterSpacing: "1px" }}>TOTAL</small><p style={{ fontWeight: "800", fontSize: "1.3rem", margin: "5px 0", color: "#374151" }}>${precioTotal.toLocaleString()}</p></div>
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <p style={{ color: "#831843", fontSize: "1.1rem", marginBottom: "5px" }}>Para que tu turno quede confirmado debes abonar una seña del 50%:</p>
-                <p style={{ fontSize: "2.5rem", color: "#db2777", margin: "5px 0 20px 0", fontWeight: "900" }}>${senia.toLocaleString()}</p>
-                
-                <button onClick={pagarSenia} style={{ backgroundColor: "#db2777", color: "white", border: "none", padding: "18px 60px", borderRadius: "50px", fontSize: "1.3rem", fontWeight: "bold", cursor: "pointer", boxShadow: "0 8px 25px rgba(219, 39, 119, 0.4)", transition: "transform 0.2s" }} onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.05)"} onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}>
-                   Pagar Seña ➜
-                </button>
-
-                <p style={{ marginTop: "15px", fontSize: "0.85rem", color: "#9ca3af" }}>🔒 Procesado por Mercado Pago</p>
+          {servicioPrincipal === "consulta" && (
+            <div style={{ backgroundColor: "#fdf2f8", padding: "30px", borderRadius: "20px", border: "3px dashed #db2777", animation: "fadeIn 0.5s" }}>
+              <p style={{ color: "#db2777", fontWeight: "bold", marginBottom: "20px", fontSize: "1.2rem" }}>Seleccioná la modalidad:</p>
+              <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
+                <button onClick={() => setSubTipoConsulta("particular")} style={estiloSubBoton(subTipoConsulta === "particular")}>Particular ($22.000)</button>
+                <button onClick={() => setSubTipoConsulta("obrasocial")} style={estiloSubBoton(subTipoConsulta === "obrasocial")}>Obra Social ($18.000)</button>
               </div>
             </div>
           )}
         </div>
-      </section>
 
-      <div style={{ textAlign: "center", marginTop: "50px", color: "#831843", fontSize: "1rem", fontWeight: "600" }}>
-        <p>📍 José Ignacio Sierra 330, Consultorios Santa Sofía, Metán.</p>
-        <p>© {new Date().getFullYear()} Dra. Ana Belén</p>
+        {/* PASO 2 */}
+        {(servicioPrincipal === "apto" || (servicioPrincipal === "consulta" && subTipoConsulta)) && (
+          <div style={estiloTarjeta}>
+            <h3 style={estiloTituloPaso}>2. Elegí Día y Hora</h3>
+            <Calendar selectedDia={selectedDia} selectedHora={selectedHora} onSelectDia={setSelectedDia} onSelectHora={setSelectedHora} />
+          </div>
+        )}
+
+        {/* PASO 3 */}
+        {selectedDia && selectedHora && (
+          <div style={estiloTarjeta}>
+            <h3 style={estiloTituloPaso}>3. Tus Datos</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: "25px" }}>
+              <input type="text" placeholder="Nombre y Apellido completo" value={nombrePaciente} onChange={(e) => setNombrePaciente(e.target.value)} style={estiloInput} />
+              <input type="tel" placeholder="Número de Teléfono" value={telefonoPaciente} onChange={(e) => setTelefonoPaciente(e.target.value)} style={estiloInput} />
+            </div>
+          </div>
+        )}
+
+        {/* RESUMEN FINAL */}
+        {nombrePaciente && telefonoPaciente && servicioActual && (
+          <div style={{ ...estiloTarjeta, border: "4px solid #db2777", backgroundColor: "#fff1f2" }}>
+            <h3 style={{ ...estiloTituloPaso, color: "#be185d", textAlign: "center", borderBottom: "none" }}>📝 Resumen del Turno</h3>
+            <div style={{ color: "#374151", fontSize: "1.3rem", marginBottom: "30px", lineHeight: "1.8", backgroundColor: "white", padding: "25px", borderRadius: "20px" }}>
+              <p><strong>Servicio:</strong> {servicioActual.titulo}</p>
+              <p><strong>Fecha:</strong> {selectedDia} a las {selectedHora}hs</p>
+              <p><strong>Paciente:</strong> {nombrePaciente}</p>
+              <div style={{ borderTop: "3px dashed #eee", marginTop: "20px", paddingTop: "20px", display: "flex", justifyContent: "space-between", color: "#db2777", fontWeight: "bold", fontSize: "1.6rem" }}>
+                <span>Seña (50%):</span>
+                <span>${servicioActual.sena}</span>
+              </div>
+            </div>
+            <button onClick={handlePagar} disabled={cargando} style={{ width: "100%", padding: "25px", backgroundColor: "#009ee3", color: "white", border: "none", borderRadius: "20px", fontSize: "1.5rem", fontWeight: "bold", cursor: "pointer", boxShadow: "0 8px 20px rgba(0, 158, 227, 0.3)" }}>
+              {cargando ? "Procesando..." : `Confirmar y Pagar Seña ($${servicioActual.sena})`}
+            </button>
+          </div>
+        )}
       </div>
-    </main>
+
+      {/* 🟢 BOTÓN FLOTANTE WHATSAPP */}
+      <a 
+        href="https://wa.me/5493876405797?text=Hola%20Dra%20Ana%2C%20quisiera%20hacerle%20una%20consulta."
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          position: "fixed",
+          bottom: "25px",
+          right: "25px",
+          backgroundColor: "#25D366",
+          width: "70px",
+          height: "70px",
+          borderRadius: "50%",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          boxShadow: "0 6px 20px rgba(0,0,0,0.3)",
+          zIndex: 100,
+          transition: "transform 0.2s"
+        }}
+        onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.1)"}
+        onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}
+      >
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style={{ width: "45px", height: "45px" }} />
+      </a>
+
+    </div>
   );
 }
+
+// --- ESTILOS ---
+const estiloTarjeta = { backgroundColor: "white", padding: "40px", borderRadius: "30px", marginBottom: "35px", boxShadow: "0 8px 20px rgba(0,0,0,0.08)" };
+const estiloTituloPaso = { color: "#db2777", marginBottom: "30px", fontSize: "1.7rem", borderBottom: "4px solid #fce7f3", paddingBottom: "15px", fontWeight: "bold" };
+const estiloInput = { padding: "20px", borderRadius: "15px", border: "3px solid #e5e7eb", fontSize: "1.2rem", outlineColor: "#db2777", color: "#1f2937", width: "100%", boxSizing: "border-box" as const };
+
+const estiloBotonSeleccion = (activo: boolean) => ({
+  flex: "1 1 220px", padding: "30px", borderRadius: "20px", 
+  border: activo ? "4px solid #db2777" : "3px solid #e5e7eb", 
+  backgroundColor: activo ? "#fff1f2" : "white", 
+  color: activo ? "#db2777" : "#4b5563", 
+  fontSize: "1.3rem", fontWeight: "bold" as const, cursor: "pointer", transition: "all 0.2s"
+});
+
+const estiloSubBoton = (activo: boolean) => ({
+  flex: "1 1 180px", padding: "20px", borderRadius: "15px", border: "none",
+  backgroundColor: activo ? "#db2777" : "white", 
+  color: activo ? "white" : "#db2777", 
+  fontWeight: "bold" as const, cursor: "pointer", 
+  boxShadow: "0 6px 15px rgba(0,0,0,0.1)", 
+  fontSize: "1.2rem",
+  outline: activo ? "none" : "3px solid #db2777"
+});
