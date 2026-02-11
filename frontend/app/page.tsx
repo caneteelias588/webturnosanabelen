@@ -51,6 +51,18 @@ export default function Home() {
       alert("Por favor completá todos los pasos.");
       return;
     }
+
+    // 👇 ESTO ES LO NUEVO: Guardamos los datos antes de irnos a Mercado Pago
+    // Así la página de confirmación sabe a quién mandarle el mail.
+    localStorage.setItem("datosTurnoTemp", JSON.stringify({
+      dia: selectedDia,
+      hora: selectedHora,
+      nombre: nombrePaciente,
+      telefono: telefonoPaciente,
+      servicio: servicioActual.titulo
+    }));
+    // 👆 FIN DE LO NUEVO
+
     setCargando(true);
     try {
       const descripcion = `${servicioActual.titulo} - Paciente: ${nombrePaciente} (Tel: ${telefonoPaciente})`;
@@ -96,12 +108,11 @@ export default function Home() {
         {/* CONTENIDO DE LA PORTADA */}
         <div style={{ padding: "40px 35px" }}>
           
-          {/* DESCRIPCIÓN (CORREGIDA: TODO PAREJO) */}
+          {/* DESCRIPCIÓN */}
           <div style={{ textAlign: "center", color: "#374151", marginBottom: "40px", lineHeight: "1.7", fontSize: "1.3rem" }}>
             <p style={{ marginBottom: "20px" }}>
               En mi consultorio médico ofrezco atención integral a niños y adolescentes, abarcando desde consultas de rutina hasta tratamientos especializados.
             </p>
-            {/* Saqué el fontWeight 'bold' para que sea igual a la de arriba */}
             <p>
               Acompañemos el crecimiento de los niños con una atención amorosa, respetuosa y dedicada, cuidando su salud y la tranquilidad de la familia.
             </p>
