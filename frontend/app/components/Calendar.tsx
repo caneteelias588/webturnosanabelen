@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { db } from "../firebase"; // Importamos la conexión
-import { collection, getDocs } from "firebase/firestore"; // Funciones para leer
+import { db } from "../firebase"; 
+import { collection, getDocs } from "firebase/firestore"; 
 
 // 👇 TUS HORARIOS EXACTOS
 const HORARIOS = [
@@ -28,10 +28,16 @@ const generarDiasReales = () => {
       // Formato bonito: "Martes 30"
       const nombreDia = fecha.toLocaleDateString("es-AR", { weekday: "long" });
       const numeroDia = fecha.getDate();
-      const etiqueta = `${nombreDia.charAt(0).toUpperCase() + nombreDia.slice(1)} ${numeroDia}`; // "Martes 30"
+      const etiqueta = `${nombreDia.charAt(0).toUpperCase() + nombreDia.slice(1)} ${numeroDia}`; 
       
-      // Valor único para guardar: "2026-01-30"
-      const valor = fecha.toISOString().split("T")[0]; 
+      // 🔥 CORRECCIÓN CLAVE AQUÍ 👇
+      // Antes usábamos toISOString() que cambiaba la fecha por la zona horaria.
+      // Ahora construimos la fecha "a mano" con los datos locales para que no falle nunca.
+      const year = fecha.getFullYear();
+      const month = String(fecha.getMonth() + 1).padStart(2, "0"); // Mes empieza en 0
+      const day = String(fecha.getDate()).padStart(2, "0");
+      
+      const valor = `${year}-${month}-${day}`; // Resultado: "2026-02-12" (SIEMPRE LOCAL)
       
       diasGenerados.push({ etiqueta, valor });
     }
@@ -65,7 +71,7 @@ export default function Calendar({
         
         querySnapshot.forEach((doc) => {
           const data = doc.data();
-          // Guardamos "2026-01-30_17:00"
+          // Guardamos "2026-02-12_17:00"
           listaOcupados.push(`${data.dia}_${data.hora}`);
         });
         
@@ -93,14 +99,13 @@ export default function Calendar({
                 style={{
                   padding: "10px 20px",
                   borderRadius: "8px",
-                  border: isSelected ? "1px solid #009ee3" : "1px solid #ddd",
+                  border: isSelected ? "2px solid #db2777" : "1px solid #ddd", // Color Rosa al seleccionar
                   cursor: "pointer",
-                  // TU ESTILO: Azul si está seleccionado
-                  backgroundColor: isSelected ? "#009ee3" : "#fff",
-                  color: isSelected ? "#fff" : "#555",
+                  backgroundColor: isSelected ? "#fce7f3" : "#fff",
+                  color: isSelected ? "#db2777" : "#555",
                   fontWeight: isSelected ? "bold" : "normal",
                   transition: "all 0.2s ease",
-                  boxShadow: isSelected ? "0 4px 8px rgba(0,158,227,0.2)" : "0 2px 4px rgba(0,0,0,0.05)"
+                  boxShadow: isSelected ? "0 4px 8px rgba(219, 39, 119, 0.2)" : "0 2px 4px rgba(0,0,0,0.05)"
                 }}
               >
                 {diaObj.etiqueta}
@@ -127,22 +132,22 @@ export default function Calendar({
                 <button
                   key={hora}
                   onClick={() => !estaOcupado && onSelectHora(hora)}
-                  disabled={estaOcupado} // Desactiva el botón si está ocupado
+                  disabled={estaOcupado} 
                   style={{
                     padding: "10px",
                     borderRadius: "8px",
                     // Si está ocupado: Gris y tachado
-                    // Si está seleccionado: Verde (Tu estilo)
+                    // Si está seleccionado: Rosa Fuerte
                     // Si está libre: Blanco
-                    border: estaOcupado ? "1px solid #e5e7eb" : isSelected ? "1px solid #28a745" : "1px solid #ddd",
-                    backgroundColor: estaOcupado ? "#f3f4f6" : isSelected ? "#28a745" : "#fff",
+                    border: estaOcupado ? "1px solid #e5e7eb" : isSelected ? "2px solid #db2777" : "1px solid #ddd",
+                    backgroundColor: estaOcupado ? "#f3f4f6" : isSelected ? "#db2777" : "#fff",
                     color: estaOcupado ? "#9ca3af" : isSelected ? "#fff" : "#555",
                     fontWeight: isSelected ? "bold" : "normal",
                     transition: "all 0.2s ease",
                     textAlign: "center",
                     textDecoration: estaOcupado ? "line-through" : "none",
                     cursor: estaOcupado ? "not-allowed" : "pointer",
-                    boxShadow: isSelected ? "0 4px 8px rgba(40,167,69,0.2)" : "0 2px 4px rgba(0,0,0,0.05)"
+                    boxShadow: isSelected ? "0 4px 8px rgba(219, 39, 119, 0.3)" : "0 2px 4px rgba(0,0,0,0.05)"
                   }}
                 >
                   {hora}
