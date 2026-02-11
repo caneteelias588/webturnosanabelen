@@ -1,18 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation"; 
 import emailjs from "@emailjs/browser";
 import { db } from "../firebase";
 import { addDoc, collection } from "firebase/firestore";
 
-export default function ConfirmacionPage() {
+// 1. Creamos un componente interno con la lógica
+function ContenidoConfirmacion() {
   const searchParams = useSearchParams();
   const router = useRouter(); 
   const [mensaje, setMensaje] = useState("Procesando tu pago...");
   const [procesando, setProcesando] = useState(true);
 
-  // 👇 TUS CLAVES DE EMAILJS (YA CONFIGURADAS)
+  // 👇 TUS CLAVES DE EMAILJS
   const SERVICE_ID = "service_rzs7p0a";
   const TEMPLATE_ID = "template_4wuof9l";
   const PUBLIC_KEY = "yb1x788-jNrDrEzQw";
@@ -28,7 +29,6 @@ export default function ConfirmacionPage() {
   }, [searchParams]);
 
   const procesarTurno = async () => {
-    // 1. Recuperamos los datos que guardamos antes de ir a pagar
     const datosGuardados = localStorage.getItem("datosTurnoTemp");
     
     if (datosGuardados) {
@@ -36,7 +36,7 @@ export default function ConfirmacionPage() {
       setMensaje("Pago aprobado ✅. Confirmando turno...");
 
       try {
-        // 2. Guardamos en Firebase (Base de datos)
+        // Guardamos en Firebase
         await addDoc(collection(db, "turnos"), {
           dia: datos.dia,
           hora: datos.hora,
@@ -47,7 +47,7 @@ export default function ConfirmacionPage() {
           fechaReserva: new Date().toISOString()
         });
 
-        // 3. Enviamos el mail a la Dra. Ana
+        // Enviamos el mail
         await emailjs.send(SERVICE_ID, TEMPLATE_ID, {
             nombre_paciente: datos.nombre,
             telefono: datos.telefono,
@@ -57,7 +57,7 @@ export default function ConfirmacionPage() {
         }, PUBLIC_KEY);
 
         setMensaje("¡Listo! Turno confirmado. Te esperamos. 🎉");
-        localStorage.removeItem("datosTurnoTemp"); // Limpiamos para que no quede basura
+        localStorage.removeItem("datosTurnoTemp"); 
 
       } catch (error) {
         console.error("Error:", error);
@@ -70,34 +70,41 @@ export default function ConfirmacionPage() {
   };
 
   return (
+    <div style={{ maxWidth: "600px", margin: "0 auto", backgroundColor: "white", padding: "40px", borderRadius: "30px", boxShadow: "0 10px 40px rgba(219, 39, 119, 0.15)" }}>
+      <h1 style={{ color: "#db2777", fontSize: "4rem", marginBottom: "20px" }}>
+        {procesando ? "⏳" : "✅"}
+      </h1>
+      <h2 style={{ color: "#374151", marginBottom: "30px", fontSize: "1.5rem" }}>{mensaje}</h2>
+      
+      {!procesando && (
+        <button 
+          onClick={() => router.push("/")} 
+          style={{ 
+            padding: "18px 40px", 
+            backgroundColor: "#009ee3", 
+            color: "white", 
+            border: "none",
+            borderRadius: "50px", 
+            fontWeight: "bold", 
+            fontSize: "1.2rem",
+            cursor: "pointer",
+            boxShadow: "0 4px 15px rgba(0, 158, 227, 0.3)"
+          }}
+        >
+          Volver al Inicio
+        </button>
+      )}
+    </div>
+  );
+}
+
+// 2. El componente principal envuelve al otro con "Suspense"
+export default function ConfirmacionPage() {
+  return (
     <div style={{ padding: "50px", textAlign: "center", fontFamily: "'Varela Round', sans-serif", minHeight: "100vh", backgroundColor: "#fdf2f8" }}>
-      <div style={{ maxWidth: "600px", margin: "0 auto", backgroundColor: "white", padding: "40px", borderRadius: "30px", boxShadow: "0 10px 40px rgba(219, 39, 119, 0.15)" }}>
-        
-        <h1 style={{ color: "#db2777", fontSize: "4rem", marginBottom: "20px" }}>
-          {procesando ? "⏳" : "✅"}
-        </h1>
-        
-        <h2 style={{ color: "#374151", marginBottom: "30px", fontSize: "1.5rem" }}>{mensaje}</h2>
-        
-        {!procesando && (
-          <button 
-            onClick={() => router.push("/")} 
-            style={{ 
-              padding: "18px 40px", 
-              backgroundColor: "#009ee3", 
-              color: "white", 
-              border: "none",
-              borderRadius: "50px", 
-              fontWeight: "bold", 
-              fontSize: "1.2rem",
-              cursor: "pointer",
-              boxShadow: "0 4px 15px rgba(0, 158, 227, 0.3)"
-            }}
-          >
-            Volver al Inicio
-          </button>
-        )}
-      </div>
+      <Suspense fallback={<h2 style={{color: "#db2777"}}>Cargando confirmación...</h2>}>
+        <ContenidoConfirmacion />
+      </Suspense>
     </div>
   );
 }
