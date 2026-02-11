@@ -52,8 +52,7 @@ export default function Home() {
       return;
     }
 
-    // 👇 ESTO ES LO NUEVO: Guardamos los datos antes de irnos a Mercado Pago
-    // Así la página de confirmación sabe a quién mandarle el mail.
+    // Guardamos los datos temporalmente
     localStorage.setItem("datosTurnoTemp", JSON.stringify({
       dia: selectedDia,
       hora: selectedHora,
@@ -61,7 +60,6 @@ export default function Home() {
       telefono: telefonoPaciente,
       servicio: servicioActual.titulo
     }));
-    // 👆 FIN DE LO NUEVO
 
     setCargando(true);
     try {
@@ -197,10 +195,18 @@ export default function Home() {
               <p><strong>Servicio:</strong> {servicioActual.titulo}</p>
               <p><strong>Fecha:</strong> {selectedDia} a las {selectedHora}hs</p>
               <p><strong>Paciente:</strong> {nombrePaciente}</p>
+              
               <div style={{ borderTop: "3px dashed #eee", marginTop: "20px", paddingTop: "20px", display: "flex", justifyContent: "space-between", color: "#db2777", fontWeight: "bold", fontSize: "1.6rem" }}>
                 <span>Seña (50%):</span>
                 <span>${servicioActual.sena}</span>
               </div>
+
+              {/* 👇 ACÁ AGREGUÉ EL CARTEL DE NO REEMBOLSABLE 👇 */}
+              <p style={{ color: "#ef4444", fontSize: "1rem", marginTop: "15px", textAlign: "center", fontWeight: "bold", fontStyle: "italic" }}>
+                * Importante: La seña no es reembolsable en caso de inasistencia.
+              </p>
+              {/* 👆 ------------------------------------------ 👆 */}
+
             </div>
             <button onClick={handlePagar} disabled={cargando} style={{ width: "100%", padding: "25px", backgroundColor: "#009ee3", color: "white", border: "none", borderRadius: "20px", fontSize: "1.5rem", fontWeight: "bold", cursor: "pointer", boxShadow: "0 8px 20px rgba(0, 158, 227, 0.3)" }}>
               {cargando ? "Procesando..." : `Confirmar y Pagar Seña ($${servicioActual.sena})`}
