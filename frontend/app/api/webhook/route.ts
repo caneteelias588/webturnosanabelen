@@ -30,10 +30,10 @@ export async function POST(request: Request) {
           // Extraemos la info del paciente que guardamos en external_reference
           const infoTurno = JSON.parse(payment.external_reference); 
           
-          console.log("💾 Guardando turno en colección WebTurnos para:", infoTurno.nombre);
+          console.log("💾 Guardando turno en colección turnos para:", infoTurno.nombre);
 
           // Guardamos en Firebase con los nombres de campos de tu base de datos
-          await addDoc(collection(db, "WebTurnos"), {
+          await addDoc(collection(db, "turnos"), {
             nombre: infoTurno.nombre,
             dni: infoTurno.dni,
             telefono: infoTurno.tel || infoTurno.telefono,

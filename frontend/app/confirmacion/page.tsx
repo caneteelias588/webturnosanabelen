@@ -3,68 +3,60 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation"; 
 import emailjs from "@emailjs/browser";
-import { db } from "../firebase";
-import { addDoc, collection } from "firebase/firestore";
 
-// 1. Creamos un componente interno con la lógica
 function ContenidoConfirmacion() {
   const searchParams = useSearchParams();
   const router = useRouter(); 
-  const [mensaje, setMensaje] = useState("Procesando tu pago...");
+  const [mensaje, setMensaje] = useState("Verificando tu pago...");
   const [procesando, setProcesando] = useState(true);
 
-  // 👇 TUS CLAVES DE EMAILJS
   const SERVICE_ID = "service_rzs7p0a";
   const TEMPLATE_ID = "template_4wuof9l";
   const PUBLIC_KEY = "yb1x788-jNrDrEzQw";
 
   useEffect(() => {
-    // Solo ejecutamos si Mercado Pago nos devuelve "approved"
-    if (searchParams.get("status") === "approved") {
-      procesarTurno();
+    const status = searchParams.get("status");
+
+    if (status === "approved") {
+      setMensaje("¡Pago aprobado! ✅");
+      enviarNotificacionYLimpiar();
+    } else if (status === "pending") {
+      setMensaje("Tu pago está pendiente de aprobación. ⏳");
+      setProcesando(false);
     } else {
-      setMensaje("El pago no fue aprobado o está pendiente. ❌");
+      setMensaje("El pago no fue procesado. ❌");
       setProcesando(false);
     }
   }, [searchParams]);
 
-  const procesarTurno = async () => {
+  const enviarNotificacionYLimpiar = async () => {
     const datosGuardados = localStorage.getItem("datosTurnoTemp");
     
     if (datosGuardados) {
       const datos = JSON.parse(datosGuardados);
-      setMensaje("Pago aprobado ✅. Confirmando turno...");
-
+      
       try {
-        // Guardamos en Firebase
-        await addDoc(collection(db, "turnos"), {
-          dia: datos.dia,
-          hora: datos.hora,
-          nombre: datos.nombre,
-          telefono: datos.telefono,
-          servicio: datos.servicio,
-          pagado: true,
-          fechaReserva: new Date().toISOString()
-        });
-
-        // Enviamos el mail
+        // Intentamos mandar el mail (esto es opcional porque el Webhook ya guardó el turno)
         await emailjs.send(SERVICE_ID, TEMPLATE_ID, {
             nombre_paciente: datos.nombre,
-            telefono: datos.telefono,
+            telefono: datos.telefono || datos.tel,
             servicio: datos.servicio,
             dia: datos.dia,
             hora: datos.hora
         }, PUBLIC_KEY);
 
         setMensaje("¡Listo! Turno confirmado. Te esperamos. 🎉");
-        localStorage.removeItem("datosTurnoTemp"); 
-
       } catch (error) {
-        console.error("Error:", error);
-        setMensaje("Turno guardado, pero hubo un error al notificar.");
+        console.error("Error al enviar email:", error);
+        // Si falla el mail, NO asustamos al usuario, porque el turno YA se guardó vía Webhook
+        setMensaje("¡Pago aprobado! Tu turno ya está registrado. 🎉");
       }
+      
+      // Limpiamos el localStorage para que no se duplique
+      localStorage.removeItem("datosTurnoTemp"); 
     } else {
-      setMensaje("No se encontraron los datos del turno.");
+      // Si no hay datos en localStorage, no pasa nada, el Webhook ya tiene la info
+      setMensaje("¡Pago confirmado! Gracias por tu reserva. 🎉");
     }
     setProcesando(false);
   };
@@ -98,7 +90,6 @@ function ContenidoConfirmacion() {
   );
 }
 
-// 2. El componente principal envuelve al otro con "Suspense"
 export default function ConfirmacionPage() {
   return (
     <div style={{ padding: "50px", textAlign: "center", fontFamily: "'Varela Round', sans-serif", minHeight: "100vh", backgroundColor: "#fdf2f8" }}>
