@@ -1,37 +1,61 @@
 import { NextResponse } from 'next/server';
 
+// Forzamos a que Next.js no intente pre-renderizar esta ruta como estática
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    
-    // Mercado Pago manda mucha info, a nosotros nos interesa el 'payment'
-    if (body.type === 'payment') {
-      const paymentId = body.data.id;
+    console.log("📩 Webhook recibido:", body);
 
-      // 1. Consultamos a Mercado Pago para confirmar que el pago es real y está aprobado
+    // Mercado Pago puede mandar el ID en body.data.id o directamente en body.id
+    const paymentId = body.data?.id || body.id;
+    const type = body.type || body.action; // 'action' se usa en algunas versiones de MP
+
+    if (paymentId && (type === 'payment' || type === 'payment.created' || type === 'payment.updated')) {
+      
+      // 1. Consultamos a Mercado Pago para confirmar el estado
+      // IMPORTANTE: Asegurate de que en Vercel la variable se llame MERCADOPAGO_ACCESS_TOKEN
       const res = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
         headers: {
-          Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` // Tu Token de Mercado Pago
+          Authorization: `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`
         }
       });
 
-      const payment = await res.json();
+      if (res.ok) {
+        const payment = await res.json();
 
-      if (payment.status === 'approved') {
-        // 2. ACÁ VA TU MAGIA:
-        // Sacamos la info del turno que guardamos en 'external_reference' al crear el pago
-        const infoTurno = JSON.parse(payment.external_reference); 
-        
-        // 3. LLAMAR A TU FUNCIÓN QUE GUARDA EL TURNO
-        // Ejemplo: await guardarTurnoConfirmado(infoTurno.fecha, infoTurno.hora, infoTurno.paciente);
-        
-        console.log("✅ Turno confirmado y guardado para:", infoTurno.paciente);
+        if (payment.status === 'approved') {
+          // 2. Extraemos la info del turno
+          const infoTurno = JSON.parse(payment.external_reference); 
+          
+          // ACÁ es donde luego conectarás tu función de Firebase
+          // Ejemplo: await guardarEnFirebase(infoTurno);
+          
+          console.log("✅ Turno confirmado para:", infoTurno.nombre || infoTurno.paciente);
+        }
       }
     }
 
-    return NextResponse.json({ status: 'ok' }, { status: 200 });
+    // SIEMPRE devolvemos 200 OK rápido para que Mercado Pago no se quede esperando
+    return new Response(JSON.stringify({ received: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+
   } catch (error) {
     console.error("❌ Error en Webhook:", error);
-    return NextResponse.json({ message: "Error" }, { status: 500 });
+    // Devolvemos 200 aunque falle el proceso interno para que MP no reintente infinitamente
+    return new Response(JSON.stringify({ message: "Error recibido pero procesado" }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
+}
+
+// Agregamos GET para evitar el error 405 si alguien (o MP) testea la URL manualmente
+export async function GET() {
+  return new Response(JSON.stringify({ message: "El webhook está vivo, pero espera un POST" }), {
+    status: 200,
+  });
 }
