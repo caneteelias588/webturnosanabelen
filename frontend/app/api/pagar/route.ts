@@ -4,12 +4,10 @@ const client = new MercadoPagoConfig({ accessToken: process.env.MERCADOPAGO_ACCE
 
 export async function POST(req: Request) {
   try {
-    // 1. Recibimos todos los datos, incluidos los del paciente
     const { monto, nombre, dia, hora, datosPaciente } = await req.json();
-
     const preference = new Preference(client);
 
-    // Cambiá esto por tu URL de producción en Vercel
+    // URL de tu web en producción
     const URL_BASE = "https://webturnosanabelen.vercel.app";
 
     const result = await preference.create({
@@ -23,17 +21,14 @@ export async function POST(req: Request) {
             currency_id: "ARS",
           },
         ],
-        // 👇 REFERENCIA EXTERNA: Guardamos toda la info del turno aquí. 
-        // Mercado Pago nos la devolverá en el Webhook.
+        // Guardamos TODA la info aquí para que el Webhook la recupere
         external_reference: JSON.stringify({
           dia,
           hora,
           ...datosPaciente
         }),
-        
-        // 👇 WEBHOOK: Esta es la clave. Mercado Pago llamará aquí apenas se apruebe el pago.
+        // El "oído" que escuchará el pago
         notification_url: `${URL_BASE}/api/webhook`,
-
         back_urls: {
           success: `${URL_BASE}/confirmacion?status=approved`,
           failure: URL_BASE,

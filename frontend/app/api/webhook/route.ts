@@ -1,21 +1,22 @@
 import { NextResponse } from 'next/server';
+import { db } from "../../firebase"; 
+import { collection, addDoc } from "firebase/firestore";
 
-// Forzamos a que Next.js no intente pre-renderizar esta ruta como estática
+// Esto evita errores de pre-renderizado en Vercel
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    console.log("📩 Webhook recibido:", body);
+    console.log("📩 Webhook recibido de Mercado Pago");
 
-    // Mercado Pago puede mandar el ID en body.data.id o directamente en body.id
+    // Buscamos el ID del pago
     const paymentId = body.data?.id || body.id;
-    const type = body.type || body.action; // 'action' se usa en algunas versiones de MP
+    const type = body.type || body.action;
 
     if (paymentId && (type === 'payment' || type === 'payment.created' || type === 'payment.updated')) {
       
-      // 1. Consultamos a Mercado Pago para confirmar el estado
-      // IMPORTANTE: Asegurate de que en Vercel la variable se llame MERCADOPAGO_ACCESS_TOKEN
+      // Consultamos a Mercado Pago para validar el pago
       const res = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
         headers: {
           Authorization: `Bearer ${process.env.MERCADOPAGO_ACCESS_TOKEN}`
@@ -26,18 +27,31 @@ export async function POST(request: Request) {
         const payment = await res.json();
 
         if (payment.status === 'approved') {
-          // 2. Extraemos la info del turno
+          // Extraemos la info del paciente que guardamos en external_reference
           const infoTurno = JSON.parse(payment.external_reference); 
           
-          // ACÁ es donde luego conectarás tu función de Firebase
-          // Ejemplo: await guardarEnFirebase(infoTurno);
+          console.log("💾 Guardando turno en colección WebTurnos para:", infoTurno.nombre);
+
+          // Guardamos en Firebase con los nombres de campos de tu base de datos
+          await addDoc(collection(db, "WebTurnos"), {
+            nombre: infoTurno.nombre,
+            dni: infoTurno.dni,
+            telefono: infoTurno.tel || infoTurno.telefono,
+            fecha: infoTurno.dia,
+            hora: infoTurno.hora,
+            motivo: infoTurno.motivo,
+            servicio: infoTurno.servicio,
+            paymentId: paymentId,
+            estado: "confirmado",
+            fechaRegistro: new Date().toISOString()
+          });
           
-          console.log("✅ Turno confirmado para:", infoTurno.nombre || infoTurno.paciente);
+          console.log("✅ Turno guardado exitosamente.");
         }
       }
     }
 
-    // SIEMPRE devolvemos 200 OK rápido para que Mercado Pago no se quede esperando
+    // Respuesta 200 obligatoria para Mercado Pago
     return new Response(JSON.stringify({ received: true }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
@@ -45,17 +59,18 @@ export async function POST(request: Request) {
 
   } catch (error) {
     console.error("❌ Error en Webhook:", error);
-    // Devolvemos 200 aunque falle el proceso interno para que MP no reintente infinitamente
-    return new Response(JSON.stringify({ message: "Error recibido pero procesado" }), {
+    // Devolvemos 200 para que MP no reintente infinitamente si hay un error de código
+    return new Response(JSON.stringify({ message: "Error procesado" }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 }
 
-// Agregamos GET para evitar el error 405 si alguien (o MP) testea la URL manualmente
+// Esta función permite que si entrás por el navegador veas un mensaje en vez de un error 405
 export async function GET() {
-  return new Response(JSON.stringify({ message: "El webhook está vivo, pero espera un POST" }), {
+  return new Response(JSON.stringify({ message: "El webhook está vivo, pero espera un POST de Mercado Pago" }), {
     status: 200,
+    headers: { 'Content-Type': 'application/json' },
   });
 }
