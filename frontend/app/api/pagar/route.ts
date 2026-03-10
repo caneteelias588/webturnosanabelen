@@ -4,13 +4,12 @@ const client = new MercadoPagoConfig({ accessToken: process.env.MERCADOPAGO_ACCE
 
 export async function POST(req: Request) {
   try {
-    // 1. Recibimos los datos del turno
-    const { monto, nombre, dia, hora } = await req.json();
+    // 1. Recibimos todos los datos, incluidos los del paciente
+    const { monto, nombre, dia, hora, datosPaciente } = await req.json();
 
     const preference = new Preference(client);
 
-    // 👇 IMPORTANTE: Esta es la dirección de tu web (si estás probando en Vercel)
-    // Cuando termines, asegurate de que sea https://webturnosanabelen.vercel.app
+    // Cambiá esto por tu URL de producción en Vercel
     const URL_BASE = "https://webturnosanabelen.vercel.app";
 
     const result = await preference.create({
@@ -24,9 +23,19 @@ export async function POST(req: Request) {
             currency_id: "ARS",
           },
         ],
+        // 👇 REFERENCIA EXTERNA: Guardamos toda la info del turno aquí. 
+        // Mercado Pago nos la devolverá en el Webhook.
+        external_reference: JSON.stringify({
+          dia,
+          hora,
+          ...datosPaciente
+        }),
+        
+        // 👇 WEBHOOK: Esta es la clave. Mercado Pago llamará aquí apenas se apruebe el pago.
+        notification_url: `${URL_BASE}/api/webhook`,
+
         back_urls: {
-          // 👇 EL SECRETO: Mandamos los datos en la URL de vuelta
-          success: `${URL_BASE}/confirmacion?status=approved&dia=${dia}&hora=${hora}&nombre=${encodeURIComponent(nombre)}`,
+          success: `${URL_BASE}/confirmacion?status=approved`,
           failure: URL_BASE,
           pending: URL_BASE,
         },
@@ -36,7 +45,7 @@ export async function POST(req: Request) {
 
     return Response.json({ url: result.init_point });
   } catch (error) {
-    console.error(error);
+    console.error("Error MP:", error);
     return Response.json({ error: "Error al crear la preferencia" }, { status: 500 });
   }
 }

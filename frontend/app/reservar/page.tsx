@@ -18,7 +18,6 @@ export default function ReservarPage() {
   const [servicioPrincipal, setServicioPrincipal] = useState<"consulta" | "apto" | null>(null);
   const [subTipoConsulta, setSubTipoConsulta] = useState<"particular" | "obrasocial" | null>(null);
 
-  // 👇 ACÁ ESTÁ EL CAMBIO: Ahora el título coincide exacto con el botón
   const getDatosServicio = () => {
     if (servicioPrincipal === "apto") {
       return { titulo: "Aptos / Certificados", total: 15000, sena: 7500 };
@@ -36,18 +35,12 @@ export default function ReservarPage() {
       alert("Por favor completá todos los campos.");
       return;
     }
-    localStorage.setItem("datosTurnoTemp", JSON.stringify({
-      dia: selectedDia,
-      hora: selectedHora,
-      nombre: nombrePaciente,
-      dni: dniPaciente,
-      telefono: telefonoPaciente,
-      motivo: motivoConsulta,
-      servicio: servicioActual.titulo
-    }));
+
     setCargando(true);
     try {
-      const descripcion = `${servicioActual.titulo} - ${nombrePaciente} (DNI: ${dniPaciente})`;
+      const descripcion = `${servicioActual.titulo} - ${nombrePaciente}`;
+      
+      // ENVIAMOS TODO AL BACKEND PARA QUE MERCADO PAGO LO GUARDE
       const response = await fetch("/api/pagar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -56,16 +49,33 @@ export default function ReservarPage() {
           nombre: descripcion,
           dia: selectedDia,
           hora: selectedHora,
+          // Agregamos estos datos para que el Webhook sepa a quién pertenece el pago
+          datosPaciente: {
+            nombre: nombrePaciente,
+            dni: dniPaciente,
+            tel: telefonoPaciente,
+            motivo: motivoConsulta,
+            servicio: servicioActual.titulo
+          }
         }),
       });
+      
       const data = await response.json();
-      if (data.url) window.location.href = data.url;
+      if (data.url) {
+        // Guardamos por las dudas localmente, pero ya no dependemos de esto
+        localStorage.setItem("datosTurnoTemp", JSON.stringify({
+          dia: selectedDia, hora: selectedHora, nombre: nombrePaciente
+        }));
+        window.location.href = data.url;
+      }
     } catch (error) {
       console.error(error);
       setCargando(false);
+      alert("Hubo un error al procesar el pago.");
     }
   };
 
+  // ... (El resto del return y estilos se mantienen exactamente igual que los tenías)
   return (
     <div style={{ maxWidth: "800px", margin: "20px auto", padding: "0 20px" }}>
       <h1 style={{ color: "#db2777", textAlign: "center", marginBottom: "30px", fontSize: "2.5rem" }}>📅 Reservar Turno</h1>
@@ -75,8 +85,6 @@ export default function ReservarPage() {
         <h3 style={estiloTituloPaso}>1. ¿Qué tipo de turno necesitás?</h3>
         <div style={{ display: "flex", gap: "20px", marginBottom: "25px", flexWrap: "wrap" }}>
           <button onClick={() => { setServicioPrincipal("consulta"); setSubTipoConsulta(null); }} style={estiloBotonSeleccion(servicioPrincipal === "consulta")}>🩺 Consulta Médica</button>
-          
-          {/* El botón dice "Aptos / Certificados" */}
           <button onClick={() => { setServicioPrincipal("apto"); setSubTipoConsulta(null); }} style={estiloBotonSeleccion(servicioPrincipal === "apto")}>📝 Aptos / Certificados</button>
         </div>
         
@@ -117,10 +125,7 @@ export default function ReservarPage() {
         <div style={{ ...estiloTarjeta, border: "4px solid #db2777", backgroundColor: "#fff1f2" }}>
           <h3 style={{ ...estiloTituloPaso, color: "#be185d", textAlign: "center", borderBottom: "none" }}>📝 Resumen del Turno</h3>
           <div style={{ color: "#374151", fontSize: "1.3rem", marginBottom: "30px", lineHeight: "1.8", backgroundColor: "white", padding: "25px", borderRadius: "20px" }}>
-            
-            {/* AHORA ACÁ VA A DECIR "Aptos / Certificados" */}
             <p><strong>Servicio:</strong> {servicioActual.titulo}</p>
-            
             <p><strong>Fecha:</strong> {selectedDia} a las {selectedHora}hs</p>
             <p><strong>Paciente:</strong> {nombrePaciente}</p>
             <p><strong>DNI:</strong> {dniPaciente}</p>
@@ -141,7 +146,7 @@ export default function ReservarPage() {
   );
 }
 
-// ESTILOS
+// Estilos (sin cambios)
 const estiloTarjeta = { backgroundColor: "white", padding: "40px", borderRadius: "30px", marginBottom: "35px", boxShadow: "0 8px 20px rgba(0,0,0,0.08)" };
 const estiloTituloPaso = { color: "#db2777", marginBottom: "30px", fontSize: "1.7rem", borderBottom: "4px solid #fce7f3", paddingBottom: "15px", fontWeight: "bold" };
 const estiloInput = { padding: "20px", borderRadius: "15px", border: "3px solid #e5e7eb", fontSize: "1.2rem", outlineColor: "#db2777", color: "#1f2937", width: "100%", boxSizing: "border-box" as const };
