@@ -6,8 +6,6 @@ export async function POST(req: Request) {
   try {
     const { monto, nombre, dia, hora, datosPaciente } = await req.json();
     const preference = new Preference(client);
-
-    // URL de tu web en producción
     const URL_BASE = "https://webturnosanabelen.vercel.app";
 
     const result = await preference.create({
@@ -21,20 +19,24 @@ export async function POST(req: Request) {
             currency_id: "ARS",
           },
         ],
-        // Guardamos TODA la info aquí para que el Webhook la recupere
+        // EMPAQUETADO UNIFICADO: Usamos nombres cortos y claros
         external_reference: JSON.stringify({
-          dia,
-          hora,
-          ...datosPaciente
+          nombre: nombre,
+          dia: dia,
+          hora: hora,
+          tel: datosPaciente.tel || datosPaciente.telefono || "No provisto",
+          servicio: datosPaciente.servicio || "General",
+          dni: datosPaciente.dni || "--",
+          motivo: datosPaciente.motivo || "Consulta"
         }),
-        // El "oído" que escuchará el pago
-        notification_url: `${URL_BASE}/api/webhook`,
+        notification_url: `${URL_BASE}/api/webhook?source=mercadopago`,
         back_urls: {
           success: `${URL_BASE}/confirmacion?status=approved`,
-          failure: URL_BASE,
-          pending: URL_BASE,
+          failure: `${URL_BASE}/confirmacion?status=failure`,
+          pending: `${URL_BASE}/confirmacion?status=pending`,
         },
         auto_return: "approved",
+        binary_mode: true,
       },
     });
 

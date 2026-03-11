@@ -10,6 +10,7 @@ function ContenidoConfirmacion() {
   const [mensaje, setMensaje] = useState("Verificando tu pago...");
   const [procesando, setProcesando] = useState(true);
 
+  // CONFIGURACIÓN DE EMAILJS
   const SERVICE_ID = "service_rzs7p0a";
   const TEMPLATE_ID = "template_4wuof9l";
   const PUBLIC_KEY = "yb1x788-jNrDrEzQw";
@@ -33,29 +34,29 @@ function ContenidoConfirmacion() {
     const datosGuardados = localStorage.getItem("datosTurnoTemp");
     
     if (datosGuardados) {
-      const datos = JSON.parse(datosGuardados);
-      
       try {
-        // Intentamos mandar el mail (esto es opcional porque el Webhook ya guardó el turno)
+        const datos = JSON.parse(datosGuardados);
+        
+        // Enviamos el mail con los nombres de campos unificados
         await emailjs.send(SERVICE_ID, TEMPLATE_ID, {
             nombre_paciente: datos.nombre,
-            telefono: datos.telefono || datos.tel,
-            servicio: datos.servicio,
+            telefono: datos.tel || datos.telefono || "No provisto",
+            servicio: datos.servicio || "General",
             dia: datos.dia,
-            hora: datos.hora
+            hora: datos.hora,
+            motivo: datos.motivo || "--"
         }, PUBLIC_KEY);
 
         setMensaje("¡Listo! Turno confirmado. Te esperamos. 🎉");
       } catch (error) {
-        console.error("Error al enviar email:", error);
-        // Si falla el mail, NO asustamos al usuario, porque el turno YA se guardó vía Webhook
+        console.error("Error en el proceso final:", error);
+        // Si falla algo aquí, el pago ya fue aprobado, así que no alarmamos al usuario
         setMensaje("¡Pago aprobado! Tu turno ya está registrado. 🎉");
       }
       
-      // Limpiamos el localStorage para que no se duplique
+      // Limpiamos el rastro para evitar duplicados
       localStorage.removeItem("datosTurnoTemp"); 
     } else {
-      // Si no hay datos en localStorage, no pasa nada, el Webhook ya tiene la info
       setMensaje("¡Pago confirmado! Gracias por tu reserva. 🎉");
     }
     setProcesando(false);
