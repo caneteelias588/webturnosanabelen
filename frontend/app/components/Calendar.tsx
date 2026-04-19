@@ -16,7 +16,7 @@ const generarDiasReales = () => {
     const fecha = new Date(hoy);
     fecha.setDate(hoy.getDate() + i);
     const diaSemana = fecha.getDay();
-    if (diaSemana >= 2 && diaSemana <= 5) {
+    if (diaSemana >= 1 && diaSemana <= 5) {
       const nombreDia = fecha.toLocaleDateString("es-AR", { weekday: "long" });
       const numeroDia = fecha.getDate();
       const etiqueta = `${nombreDia.charAt(0).toUpperCase() + nombreDia.slice(1)} ${numeroDia}`; 
