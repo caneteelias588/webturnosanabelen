@@ -23,8 +23,8 @@ export default function ReservarPage() {
       return { titulo: "Aptos / Certificados", total: 15000, sena: 7500 };
     }
     if (servicioPrincipal === "consulta") {
-      if (subTipoConsulta === "particular") return { titulo: "Consulta Particular", total: 22000, sena: 11000 };
-      if (subTipoConsulta === "obrasocial") return { titulo: "Consulta Obra Social", total: 18000, sena: 9000 };
+      if (subTipoConsulta === "particular") return { titulo: "Consulta Particular", total: 30000, sena: 15000 };
+      if (subTipoConsulta === "obrasocial") return { titulo: "Consulta Obra Social", total: 20000, sena: 10000 };
     }
     return null;
   };
@@ -92,8 +92,8 @@ export default function ReservarPage() {
           <div style={{ backgroundColor: "#fdf2f8", padding: "30px", borderRadius: "20px", border: "3px dashed #db2777", animation: "fadeIn 0.5s" }}>
             <p style={{ color: "#db2777", fontWeight: "bold", marginBottom: "20px", fontSize: "1.2rem" }}>Seleccioná la modalidad:</p>
             <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
-              <button onClick={() => setSubTipoConsulta("particular")} style={estiloSubBoton(subTipoConsulta === "particular")}>Particular ($22.000)</button>
-              <button onClick={() => setSubTipoConsulta("obrasocial")} style={estiloSubBoton(subTipoConsulta === "obrasocial")}>Obra Social ($18.000)</button>
+              <button onClick={() => setSubTipoConsulta("particular")} style={estiloSubBoton(subTipoConsulta === "particular")}>Particular ($30.000)</button>
+              <button onClick={() => setSubTipoConsulta("obrasocial")} style={estiloSubBoton(subTipoConsulta === "obrasocial")}>Obra Social ($20.000)</button>
             </div>
           </div>
         )}
