@@ -1,146 +1,45 @@
 "use client";
-import { useState } from "react";
-import Link from "next/link";
 
-export default function Home() {
-  const [rating, setRating] = useState(0);
-  const [showThanks, setShowThanks] = useState(false);
+import React from "react";
 
-  const obrasSociales = [
-    "Avalian", "Unión Personal", "Boreal", "Bramed", "Galeno", "IPSS", 
-    "Jerárquicos Salud", "OSDE", "OSFATLYF", "Swiss Medical", "OSPE", 
-    "Sancor Salud", "Medifé", "Visitar", "Medical Group", "Mep Life", "y mas ..."
-  ];
-
-  const handleStarClick = (num: number) => {
-    setRating(num);
-    if (num === 5) setShowThanks(true);
-  };
-
+export default function HomePage() {
   return (
-    <div style={{ padding: "20px 15px", minHeight: "100vh", backgroundColor: "#fff5f7" }}>
-      <div className="main-grid">
-        
-        {/* BLOQUE CONVENIOS (Prioridad 3 en Celu) */}
-        <div className="box-convenios">
-          <div style={{ padding: "20px", borderRadius: "20px", border: "1px solid #fce7f3", backgroundColor: "white", boxShadow: "0 4px 15px rgba(219, 39, 119, 0.05)" }}>
-            <h3 style={{ color: "#db2777", marginBottom: "15px", fontSize: "1.1rem", fontWeight: "bold" }}>Convenios vigentes</h3>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-              {obrasSociales.map((os, i) => (
-                <button key={i} className="obra-social-btn" style={estiloTagInteractiva}>{os}</button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* BLOQUE CENTRAL: CONTENIDO PRINCIPAL (Prioridad 1 en Celu) */}
-        <div className="box-main">
-          <div style={{ backgroundColor: "white", borderRadius: "30px", overflow: "hidden", boxShadow: "0 10px 40px rgba(219, 39, 119, 0.15)" }}>
-            <header style={{ background: "linear-gradient(135deg, #ec4899 0%, #db2777 100%)", padding: "40px", color: "white", textAlign: "center" }}>
-              <div style={{ width: "120px", height: "120px", borderRadius: "50%", border: "5px solid rgba(255,255,255,0.3)", overflow: "hidden", margin: "0 auto 20px auto" }}>
-                <img src="/perfil.jpg" alt="Dra. Ana" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              </div>
-              <h1 style={{ margin: 0, fontSize: "2.2rem", fontWeight: "bold" }}>Dra. Ana Belén</h1>
-              <p style={{ fontSize: "1.1rem", opacity: 0.9 }}>Médica • MP 7327 🩺</p>
-            </header>
-
-            <div style={{ padding: "40px 30px" }}>
-              <div style={{ textAlign: "center", color: "#374151", marginBottom: "50px", lineHeight: "1.8", fontSize: "1.1rem" }}>
-                <p style={{ marginBottom: "20px", fontWeight: "bold", color: "#db2777" }}>¡Hola! Bienvenidos a mi consultorio digital. Aquí podrán reservar turnos de forma rápida y sencilla.</p>
-                <p style={{ marginBottom: "20px" }}>En mi consultorio médico ofrezco atención integral a niños y adolescentes, abarcando desde consultas de rutina hasta tratamientos especializados.</p>
-                <p style={{ fontStyle: "italic", color: "#555" }}>"Acompañemos el crecimiento de los niños con una atención amorosa, respetuosa y dedicada, cuidando su salud y la tranquilidad de la familia."</p>
-              </div>
-
-              {/* GRILLA DE 4 RECUADROS */}
-              <div className="benefits-grid">
-                <div style={estiloBeneficio}><div style={estiloIcono}>⚡</div><h3 style={estiloTituloBeneficio}>Sin Esperas</h3><p style={estiloTextoBeneficio}>Turnos exactos.</p></div>
-                <div style={estiloBeneficio}><div style={estiloIcono}>🧸</div><h3 style={estiloTituloBeneficio}>Atención Cálida</h3><p style={estiloTextoBeneficio}>Espacio para niños.</p></div>
-                <div style={estiloBeneficio}><div style={estiloIcono}>🏥</div><h3 style={estiloTituloBeneficio}>Obras Sociales</h3><p style={estiloTextoBeneficio}>Múltiples coberturas.</p></div>
-                <div style={estiloBeneficio}><div style={estiloIcono}>📍</div><h3 style={estiloTituloBeneficio}>Ubicación</h3><p style={estiloTextoBeneficio}>José I. Sierra 330.</p></div>
-              </div>
-
-              <div style={{ padding: "40px", backgroundColor: "#fff1f2", borderRadius: "25px", border: "1px solid #fce7f3", display: "flex", flexDirection: "column", alignItems: "center", gap: "25px" }}>
-                <Link href="/reservar" className="pulse-button" style={estiloBotonPrincipal}>📅 Reservar Turno</Link>
-                <a href="https://www.instagram.com/dra_anni/" target="_blank" style={{ color: "#db2777", fontWeight: "bold", textDecoration: "none", fontSize: "1.1rem" }}>Seguime en Instagram 📸</a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* BLOQUE DERECHA: AVISO REPROGRAMACIÓN (Prioridad 2 en Celu) */}
-        <div className="box-aviso">
-          <div style={{ padding: "20px", borderRadius: "20px", border: "2px dashed #db2777", backgroundColor: "#fff1f2", boxShadow: "0 4px 15px rgba(219, 39, 119, 0.1)", marginBottom: "20px" }}>
-            <h3 style={{ color: "#db2777", marginBottom: "10px", fontSize: "1.1rem", fontWeight: "bold" }}>⚠️ AVISO IMPORTANTE </h3>
-            <p style={{ color: "#db2777", fontSize: "0.9rem", fontWeight: "500", lineHeight: "1.5" }}>
-              Ante mi labor medica, pueden surgir reprogramaciones de los turnos. Nos pondremos en contacto con vos mediante WhatsApp.
-            </p>
-          </div>
-
-          <div style={{ padding: "20px", borderRadius: "20px", backgroundColor: "white", textAlign: "center", border: "1px solid #e5e7eb" }}>
-            <h3 style={{ fontSize: "0.9rem", color: "#4b5563", marginBottom: "10px" }}>¿Qué te pareció la web?</h3>
-            <div style={{ fontSize: "1.8rem", cursor: "pointer", display: "flex", justifyContent: "center", gap: "5px" }}>
-              {[1, 2, 3, 4, 5].map((num) => (
-                <span key={num} onClick={() => handleStarClick(num)} style={{ color: rating >= num ? "#fbbf24" : "#d1d5db" }}>★</span>
-              ))}
-            </div>
-            {showThanks && (
-              <div style={{ marginTop: "10px", animation: "fadeIn 0.5s" }}>
-                <p style={{ fontSize: "0.8rem", color: "#059669", fontWeight: "bold" }}>¡Gracias por valorarnos. Tu opinion nos permite mejorar!</p>
-              </div>
-            )}
-          </div>
+    <div style={{
+      minHeight: "100vh",
+      backgroundColor: "#fdf2f8",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "20px",
+      fontFamily: "sans-serif"
+    }}>
+      <div style={{
+        maxWidth: "600px",
+        backgroundColor: "white",
+        padding: "50px 30px",
+        borderRadius: "30px",
+        textAlign: "center",
+        boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+        border: "3px solid #fce7f3"
+      }}>
+        <div style={{ fontSize: "4rem", marginBottom: "20px" }}>🏖️☀️</div>
+        <h1 style={{ color: "#db2777", marginBottom: "15px", fontSize: "2rem" }}>
+          Cerrado por Vacaciones
+        </h1>
+        <p style={{ color: "#4b5563", fontSize: "1.2rem", lineHeight: "1.6", marginBottom: "25px" }}>
+          El consultorio de la Dra. Ana Belén permanecerá cerrado por receso vacacional.
+        </p>
+        <div style={{
+          backgroundColor: "#fff1f2",
+          padding: "15px",
+          borderRadius: "15px",
+          color: "#be185d",
+          fontWeight: "bold",
+          fontSize: "1.1rem"
+        }}>
+          📅 La agenda online se habilitará nuevamente a la brevedad.
         </div>
       </div>
-
-      <footer style={{ marginTop: "40px", textAlign: "center" }}>
-        <p style={{ color: "#9ca3af", fontSize: "0.8rem", margin: "0 0 5px 0" }}>© 2026 Consultorios Santa Sofía. Todos los derechos reservados.</p>
-        <p style={{ color: "#9ca3af", fontSize: "0.85rem", fontWeight: "bold", margin: 0 }}>Web desarrollada por Elias Cañete</p>
-      </footer>
-
-      <style jsx>{`
-        .main-grid {
-          max-width: 1250px;
-          margin: 0 auto;
-          display: grid;
-          grid-template-columns: 280px 1fr 280px;
-          gap: 20px;
-        }
-
-        .benefits-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 20px;
-          margin-bottom: 50px;
-        }
-
-        @media (max-width: 1100px) {
-          .main-grid {
-            grid-template-columns: 1fr;
-          }
-          .box-main { order: 1; }
-          .box-aviso { order: 2; }
-          .box-convenios { order: 3; }
-        }
-
-        @media (max-width: 600px) {
-          .benefits-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-
-        .obra-social-btn { transition: all 0.2s; cursor: pointer; border: 1px solid #fce7f3; }
-        .obra-social-btn:hover { background-color: #db2777 !important; color: white !important; transform: scale(1.05); }
-        .pulse-button { animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-      `}</style>
     </div>
   );
 }
-
-const estiloBeneficio = { textAlign: "center" as const, padding: "20px", backgroundColor: "#fff1f2", borderRadius: "20px", border: "1px solid #fce7f3" };
-const estiloIcono = { fontSize: "2rem", marginBottom: "10px" };
-const estiloTituloBeneficio = { color: "#db2777", marginBottom: "5px", fontSize: "1rem", fontWeight: "bold" as const };
-const estiloTextoBeneficio = { color: "#666", fontSize: "0.85rem", lineHeight: "1.4" };
-const estiloTagInteractiva = { padding: "8px 12px", backgroundColor: "white", borderRadius: "10px", fontSize: "0.8rem", color: "#db2777", fontWeight: "600", outline: "none" } as any;
-const estiloBotonPrincipal = { padding: "18px 40px", fontSize: "1.3rem", backgroundColor: "#db2777", color: "white", borderRadius: "50px", fontWeight: "bold", textDecoration: "none", textAlign: "center" as const };
