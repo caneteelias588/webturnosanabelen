@@ -12,18 +12,35 @@ const HORARIOS = [
 const generarDiasReales = () => {
   const diasGenerados = [];
   const hoy = new Date();
+  
+  // ⛔ Días bloqueados en formato YYYY-MM-DD
+  const DIAS_BLOQUEADOS = [
+    "2026-08-24",
+    "2026-08-25"
+  ];
+
   for (let i = 0; i < 14; i++) {
     const fecha = new Date(hoy);
     fecha.setDate(hoy.getDate() + i);
+    
     const diaSemana = fecha.getDay();
+
     if (diaSemana >= 1 && diaSemana <= 4) {
-      const nombreDia = fecha.toLocaleDateString("es-AR", { weekday: "long" });
-      const numeroDia = fecha.getDate();
-      const etiqueta = `${nombreDia.charAt(0).toUpperCase() + nombreDia.slice(1)} ${numeroDia}`; 
       const year = fecha.getFullYear();
       const month = String(fecha.getMonth() + 1).padStart(2, "0");
       const day = String(fecha.getDate()).padStart(2, "0");
+      
       const valor = `${year}-${month}-${day}`; 
+
+      // Si coincide con un día bloqueado, lo salta
+      if (DIAS_BLOQUEADOS.includes(valor)) {
+        continue;
+      }
+
+      const nombreDia = fecha.toLocaleDateString("es-AR", { weekday: "long" });
+      const numeroDia = fecha.getDate();
+      const etiqueta = `${nombreDia.charAt(0).toUpperCase() + nombreDia.slice(1)} ${numeroDia}`; 
+      
       diasGenerados.push({ etiqueta, valor });
     }
   }
@@ -50,7 +67,6 @@ export default function Calendar({ selectedDia, selectedHora, onSelectDia, onSel
         const listaOcupados: string[] = [];
         querySnapshot.forEach((doc) => {
           const data = doc.data();
-          // CAMBIO CLAVE: Usamos data.fecha para que coincida con la DB
           if (data.fecha && data.hora) {
             listaOcupados.push(`${data.fecha}_${data.hora}`);
           }
