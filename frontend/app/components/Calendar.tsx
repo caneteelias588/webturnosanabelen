@@ -16,7 +16,8 @@ const generarDiasReales = () => {
   // ⛔ Días bloqueados en formato YYYY-MM-DD
   const DIAS_BLOQUEADOS = [
     "2026-08-24",
-    "2026-08-25"
+    "2026-08-25",
+    "2026-09-03"
   ];
 
   for (let i = 0; i < 14; i++) {
