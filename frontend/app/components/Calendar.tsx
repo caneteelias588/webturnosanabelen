@@ -26,7 +26,7 @@ const generarDiasReales = () => {
     
     const diaSemana = fecha.getDay();
 
-    if (diaSemana >= 1 && diaSemana <= 4) {
+    if (diaSemana >= 1 && diaSemana <= 5) {
       const year = fecha.getFullYear();
       const month = String(fecha.getMonth() + 1).padStart(2, "0");
       const day = String(fecha.getDate()).padStart(2, "0");
