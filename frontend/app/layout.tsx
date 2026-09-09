@@ -20,7 +20,7 @@ export default function RootLayout({
       <body className={varela.className} style={{ backgroundColor: "#fdf2f8", margin: 0, display: "flex", flexDirection: "column", minHeight: "100vh" }}>
         
         {/* BARRA DE NAVEGACIÓN */}
-        <nav style={{ position: "fixed", top: 0, left: 0, width: "100%", backgroundColor: "white", zIndex: 1000, boxShadow: "0 4px 20px rgba(0,0,0,0.05)", padding: "15px 20px", boxSizing: "border-box" }}>
+        <nav style={{ position: "fixed", top: 0, left: 0, width: "100%", backgroundColor: "#fdf2f8", zIndex: 1000, boxShadow: "0 4px 20px rgba(0,0,0,0.05)", padding: "15px 20px", boxSizing: "border-box" }}>
           <div style={{ maxWidth: "1000px", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
               <img src="/perfil3.jpg" alt="Logo" style={{ width: "40px", height: "40px", objectFit: "contain" }} />
