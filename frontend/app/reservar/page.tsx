@@ -51,9 +51,11 @@ export default function ReservarPage() {
           datosPaciente: {
             nombre: nombrePaciente,
             dni: dniPaciente,
+            telefono: telefonoPaciente,
             tel: telefonoPaciente,
             motivo: motivoConsulta,
-            servicio: servicioActual.titulo
+            servicio: servicioActual.titulo,
+            tituloServicio: servicioActual.titulo
           }
         }),
       });
@@ -157,8 +159,8 @@ export default function ReservarPage() {
                 style={estiloSubModalidad(subTipoConsulta === "particular")}
               >
                 <div style={{ fontWeight: "700", fontSize: "0.95rem" }}>Particular</div>
-                <div style={{ fontSize: "1.1rem", marginTop: "4px", fontWeight: "700" }}>$30.000</div>
-                <div style={{ fontSize: "0.78rem", opacity: 0.85, marginTop: "2px" }}>Seña requerida: $15.000</div>
+                <div style={{ fontSize: "1.1rem", marginTop: "4px", fontWeight: "700" }}>$40.000</div>
+                <div style={{ fontSize: "0.78rem", opacity: 0.85, marginTop: "2px" }}>Seña requerida: $20.000</div>
               </button>
 
               <button 
@@ -167,8 +169,8 @@ export default function ReservarPage() {
                 style={estiloSubModalidad(subTipoConsulta === "obrasocial")}
               >
                 <div style={{ fontWeight: "700", fontSize: "0.95rem" }}>Obra Social</div>
-                <div style={{ fontSize: "1.1rem", marginTop: "4px", fontWeight: "700" }}>$20.000</div>
-                <div style={{ fontSize: "0.78rem", opacity: 0.85, marginTop: "2px" }}>Seña requerida: $10.000</div>
+                <div style={{ fontSize: "1.1rem", marginTop: "4px", fontWeight: "700" }}>$25.000</div>
+                <div style={{ fontSize: "0.78rem", opacity: 0.85, marginTop: "2px" }}>Seña requerida: $12.500</div>
               </button>
             </div>
           </div>
