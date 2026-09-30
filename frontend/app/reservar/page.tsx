@@ -23,8 +23,8 @@ export default function ReservarPage() {
       return { titulo: "Aptos / Certificados", total: 15000, sena: 7500 };
     }
     if (servicioPrincipal === "consulta") {
-      if (subTipoConsulta === "particular") return { titulo: "Consulta Particular", total: 30000, sena: 15000 };
-      if (subTipoConsulta === "obrasocial") return { titulo: "Consulta Obra Social", total: 20000, sena: 10000 };
+      if (subTipoConsulta === "particular") return { titulo: "Consulta Particular", total: 40000, sena: 20000 };
+      if (subTipoConsulta === "obrasocial") return { titulo: "Consulta Obra Social", total: 25000, sena: 12500 };
     }
     return null;
   };
