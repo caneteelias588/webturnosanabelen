@@ -20,7 +20,7 @@ export default function ReservarPage() {
 
   const getDatosServicio = () => {
     if (servicioPrincipal === "apto") {
-      return { titulo: "Aptos / Certificados", total: 15000, sena: 7500 };
+      return { titulo: "Aptos / Certificados", total: 25000, sena: 12500 };
     }
     if (servicioPrincipal === "consulta") {
       if (subTipoConsulta === "particular") return { titulo: "Consulta Particular", total: 40000, sena: 20000 };
